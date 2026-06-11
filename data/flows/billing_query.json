@@ -1,0 +1,63 @@
+{
+  "process_id": "billing_query",
+  "name": "Billing Query",
+  "description": "Customer is calling about a charge, refund, or billing issue.",
+  "start_step_id": "verify_identity",
+  "steps": [
+    {
+      "id": "verify_identity",
+      "title": "1. Verify customer identity",
+      "instructions": "Ask for the customer's full name, date of birth, and account number. Confirm these match what's on file before discussing any account details.",
+      "options": [
+        { "label": "Identity verified", "next_step_id": "ask_issue" },
+        { "label": "Identity NOT verified", "next_step_id": "identity_failed" }
+      ]
+    },
+    {
+      "id": "identity_failed",
+      "title": "Identity verification failed",
+      "instructions": "Do not discuss any account details. Politely explain you're unable to verify their identity with the information provided, and offer the alternative verification options (security questions or in-app verification). If they still can't verify, end the call per the security policy.",
+      "is_end": true
+    },
+    {
+      "id": "ask_issue",
+      "title": "2. Ask about the billing issue",
+      "instructions": "Ask the customer to describe the issue: a charge they don't recognize, a refund request, or a question about their bill. Use the chat assistant if you need to look up policy on a specific charge type.",
+      "next_step_id": "check_account_status"
+    },
+    {
+      "id": "check_account_status",
+      "title": "3. Check account & charge details",
+      "instructions": "Pull up the account and locate the charge in question. Based on what you find, choose the path that matches.",
+      "options": [
+        { "label": "Charge is correct — customer just needs an explanation", "next_step_id": "explain_charge" },
+        { "label": "Charge is an error — refund is warranted", "next_step_id": "process_refund" },
+        { "label": "Unclear / needs specialist review", "next_step_id": "escalate" }
+      ]
+    },
+    {
+      "id": "explain_charge",
+      "title": "4a. Explain the charge",
+      "instructions": "Walk the customer through what the charge is for, referencing the relevant plan/fee. Confirm they understand before moving on. Ask if there's anything else they need.",
+      "next_step_id": "wrap_up"
+    },
+    {
+      "id": "process_refund",
+      "title": "4b. Process the refund",
+      "instructions": "Follow the refund procedure for the charge type (ask the chat assistant for the exact steps and any approval limits). Confirm the refund amount and timeline with the customer.",
+      "next_step_id": "wrap_up"
+    },
+    {
+      "id": "escalate",
+      "title": "4c. Escalate to a specialist",
+      "instructions": "Explain to the customer that this needs a closer look by a specialist team, and that they'll be contacted within the SLA window. Log the case with all relevant details before ending the call.",
+      "next_step_id": "wrap_up"
+    },
+    {
+      "id": "wrap_up",
+      "title": "5. Wrap up the call",
+      "instructions": "Summarize what was discussed and any next steps/timelines. Ask if there's anything else you can help with, then thank the customer for calling.",
+      "is_end": true
+    }
+  ]
+}
