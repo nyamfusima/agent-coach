@@ -48,15 +48,23 @@ A working example is included for `billing_query`.
 
 ## Getting started
 
+**Prerequisites:** Docker Desktop, Python 3.10+, and Node.js 18+.
+
+Commands are shown for both macOS/Linux and Windows (PowerShell). All paths
+are relative to the project root unless noted.
+
 ### 1. Start the database
 
 ```bash
 docker compose up -d
 ```
 
-This starts Postgres with the `pgvector` extension on `localhost:5432`.
+This starts Postgres with the `pgvector` extension on `localhost:5432`. It
+keeps running in the background until you stop it with `docker compose down`.
 
-### 2. Backend setup
+### 2. Backend setup (first time only)
+
+macOS / Linux:
 
 ```bash
 cd backend
@@ -65,12 +73,23 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` and fill in:
+Windows (PowerShell):
+
+```powershell
+cd backend
+python -m venv .venv; .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Then edit `.env` and fill in:
 
 - `ANTHROPIC_API_KEY` — for the chat assistant
 - `VOYAGE_API_KEY` — for embeddings (used in ingestion + chat retrieval)
 
-### 3. Ingest the example knowledge base
+### 3. Ingest the example knowledge base (first time, and after editing docs)
+
+From `backend/` with the venv activated:
 
 ```bash
 python -m app.services.ingestion
@@ -79,23 +98,62 @@ python -m app.services.ingestion
 This reads everything under `data/knowledge/`, chunks it, embeds it, and
 stores it in Postgres. Re-run this whenever knowledge docs change.
 
-### 4. Run the backend
+### 4. Run the backend API
+
+From `backend/` with the venv activated:
 
 ```bash
+# macOS / Linux
 uvicorn app.main:app --reload
 ```
 
-API docs available at http://localhost:8000/docs
+```powershell
+# Windows (PowerShell)
+.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+The API runs on http://localhost:8000 (interactive docs at
+http://localhost:8000/docs). Leave this terminal running.
 
 ### 5. Run the frontend
 
+In a separate terminal:
+
 ```bash
 cd frontend
-npm install
+npm install        # first time only
 npm run dev
 ```
 
 Open http://localhost:5173 — pick a call type and start a session.
+
+## Running it again (day to day)
+
+After the one-time setup above, the app needs **three things running** at the
+same time: the database, the backend API, and the frontend.
+
+```bash
+# 1. database — skip if the container is already up
+docker compose up -d
+
+# 2. backend API — in backend/, with the venv activated
+uvicorn app.main:app --reload
+#    Windows: .venv\Scripts\python.exe -m uvicorn app.main:app --port 8000 --reload
+
+# 3. frontend — in a second terminal, in frontend/
+npm run dev
+```
+
+## Troubleshooting
+
+- **"Couldn't reach the API — is the backend running on :8000? (Failed to
+  fetch)"** in the UI → the backend API isn't running. Start it (step 4 / day-to-day
+  step 2). The frontend on :5173 talks to the API on :8000.
+- **Backend fails to start with a DB connection error** → the Postgres
+  container isn't up. Check with `docker compose ps` (you should see
+  `agent-coach-db-1`) and start it with `docker compose up -d`.
+- **Empty call-type dropdown or no chat results** → run the ingestion step and
+  confirm `data/flows/` and `data/knowledge/` are populated.
 
 ## Adding a new process (call type)
 
