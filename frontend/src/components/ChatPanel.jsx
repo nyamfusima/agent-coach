@@ -1,17 +1,31 @@
 import { useState } from 'react'
 import { api } from '../api'
+import { AIInputWithFile } from './ui/AIInputWithFile'
 
 export default function ChatPanel({ session }) {
-  const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const ask = async (e) => {
-    e.preventDefault()
-    if (!question.trim()) return
-    const q = question.trim()
-    setMessages((m) => [...m, { role: 'agent', content: q }])
-    setQuestion('')
+  const ask = async (message, file) => {
+    const q = message.trim()
+    if (!q && !file) return
+
+    setMessages((m) => [...m, { role: 'agent', content: q, fileName: file?.name }])
+
+    // The backend /chat endpoint is text-only — an attachment is shown in the
+    // thread but not uploaded yet. Wire file handling here when the API supports it.
+    if (!q) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'coach',
+          content:
+            'Add a question describing what you need help with — file-only requests aren’t supported yet.',
+        },
+      ])
+      return
+    }
+
     setLoading(true)
     try {
       const result = await api.chat(session.session_id, session.process.process_id, q)
@@ -39,6 +53,7 @@ export default function ChatPanel({ session }) {
         {messages.map((m, i) => (
           <div key={i} className={`message ${m.role}`}>
             <strong>{m.role === 'agent' ? 'You' : 'Coach'}:</strong> {m.content}
+            {m.fileName && <div className="attachment">📎 {m.fileName}</div>}
             {m.sources && m.sources.length > 0 && (
               <div className="sources">Source: {m.sources.join(', ')}</div>
             )}
@@ -46,16 +61,13 @@ export default function ChatPanel({ session }) {
         ))}
         {loading && <div className="message coach">Coach is thinking…</div>}
       </div>
-      <form onSubmit={ask}>
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Type a question…"
-        />
-        <button type="submit" disabled={loading}>
-          Ask
-        </button>
-      </form>
+      <AIInputWithFile
+        placeholder="Type a question…"
+        accept="image/*"
+        maxFileSize={5}
+        disabled={loading}
+        onSubmit={ask}
+      />
     </div>
   )
 }

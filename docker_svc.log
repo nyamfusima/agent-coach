@@ -1,0 +1,7 @@
+﻿Start-Service: issued
+
+Name                Status StartType
+----                ------ ---------
+com.docker.service Running Automatic
+
+

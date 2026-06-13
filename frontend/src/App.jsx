@@ -21,7 +21,10 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Agent Coach</h1>
+        <div className="header-titles">
+          <h1>Agent Coach</h1>
+          <p className="subtitle">Live call guidance &amp; process Q&amp;A</p>
+        </div>
         {session && (
           <button className="link" onClick={() => setSession(null)}>
             End call / start new
