@@ -1,0 +1,161 @@
+{
+  "process_id": "device_support",
+  "name": "Device Support",
+  "description": "Customer needs help with a device — troubleshooting, simulator, unlock, track/repair returns, or cancellations.",
+  "start_step_id": "auto_answer",
+  "steps": [
+    {
+      "id": "auto_answer",
+      "title": "Auto Answer",
+      "instructions": "System: Smart Agent. Auto Answer",
+      "next_step_id": "whisper_with_query_type"
+    },
+    {
+      "id": "identify_make_model_of_device",
+      "title": "Identify make & Model of device",
+      "instructions": "System: Device Help. Identify make & Model of device — then complete the customer's request using the relevant procedure (ask the assistant if unsure), and return here to close.",
+      "next_step_id": "close_account"
+    },
+    {
+      "id": "whisper_with_query_type",
+      "title": "Whisper with Query Type",
+      "instructions": "System: Smart Agent. Whisper with Query Type",
+      "next_step_id": "capture_name"
+    },
+    {
+      "id": "capture_name",
+      "title": "Capture name",
+      "instructions": "System: Smart Agent. Capture name",
+      "next_step_id": "copy_number"
+    },
+    {
+      "id": "paste_number",
+      "title": "Paste number",
+      "instructions": "System: Smart Agent. Paste number",
+      "next_step_id": "clear_spaces_in_number"
+    },
+    {
+      "id": "copy_number",
+      "title": "Copy Number",
+      "instructions": "System: Smart Agent. Copy Number",
+      "next_step_id": "paste_number"
+    },
+    {
+      "id": "clear_spaces_in_number",
+      "title": "Clear spaces in Number",
+      "instructions": "System: Smart Agent. Clear spaces in Number",
+      "next_step_id": "click_next"
+    },
+    {
+      "id": "click_next",
+      "title": "Click Next",
+      "instructions": "System: Smart Agent. Click Next",
+      "next_step_id": "select_account_holder"
+    },
+    {
+      "id": "select_account_holder",
+      "title": "Select account holder",
+      "instructions": "System: Smart Agent. Select account holder",
+      "next_step_id": "select_reason_for_call_from_level_1"
+    },
+    {
+      "id": "select_reason_for_call_from_level_1",
+      "title": "Select reason for call from level 1",
+      "instructions": "System: Smart Agent. Select reason for call from level 1",
+      "next_step_id": "from_level_1_selection_level_2_selection_is_select"
+    },
+    {
+      "id": "from_level_1_selection_level_2_selection_is_select",
+      "title": "From level 1 selection, level 2 selection is selected",
+      "instructions": "System: Smart Agent. From level 1 selection, level 2 selection is selected",
+      "next_step_id": "from_level_2_selection_level_3_selection_is_select"
+    },
+    {
+      "id": "from_level_2_selection_level_3_selection_is_select",
+      "title": "From level 2 selection, level 3 selection is selected",
+      "instructions": "System: Smart Agent. From level 2 selection, level 3 selection is selected",
+      "next_step_id": "select_method_to_send_otac"
+    },
+    {
+      "id": "select_method_to_send_otac",
+      "title": "Select method to send Otac",
+      "instructions": "System: Smart Agent. Select method to send Otac",
+      "next_step_id": "select_next"
+    },
+    {
+      "id": "select_next",
+      "title": "Select next",
+      "instructions": "System: Smart Agent. Select next",
+      "next_step_id": "wait_for_customer_to_repeat_otac"
+    },
+    {
+      "id": "wait_for_customer_to_repeat_otac",
+      "title": "Wait for customer to repeat Otac",
+      "instructions": "System: Smart Agent. Wait for customer to repeat Otac",
+      "next_step_id": "enter_otac_from_customer_and_click_next"
+    },
+    {
+      "id": "enter_otac_from_customer_and_click_next",
+      "title": "Enter Otac from customer and click next",
+      "instructions": "System: Smart Agent. Enter Otac from customer and click next",
+      "next_step_id": "dpa_passed"
+    },
+    {
+      "id": "inform_customer_dpa_has_failed_and_end_call",
+      "title": "Inform customer DPA has failed and end call",
+      "instructions": "System: Smart Agent. Inform customer DPA has failed and end call",
+      "next_step_id": "acw_10_sec"
+    },
+    {
+      "id": "dpa_passed",
+      "title": "DPA passed",
+      "instructions": "System: Smart Agent. DPA passed",
+      "options": [
+        {
+          "label": "Yes",
+          "next_step_id": "open_account"
+        },
+        {
+          "label": "No",
+          "next_step_id": "inform_customer_dpa_has_failed_and_end_call"
+        }
+      ]
+    },
+    {
+      "id": "acw_10_sec",
+      "title": "ACW (10 sec)",
+      "instructions": "System: Smart Agent. ACW (10 sec)",
+      "is_end": true
+    },
+    {
+      "id": "open_account",
+      "title": "Open Account",
+      "instructions": "System: Smart Agent. Open Account",
+      "next_step_id": "select_device_help_from_drop_down"
+    },
+    {
+      "id": "select_device_help_from_drop_down",
+      "title": "Select Device Help from drop down",
+      "instructions": "System: Carehub. Select Device Help from drop down",
+      "next_step_id": "identify_make_model_of_device"
+    },
+    {
+      "id": "leave_detailed_notes_dpa_result",
+      "title": "Leave Detailed Notes/ DPA result",
+      "instructions": "System: Carehub. Leave Detailed Notes/ DPA result",
+      "next_step_id": "acw_10_sec"
+    },
+    {
+      "id": "select_level_4_disposition",
+      "title": "Select Level 4 Disposition",
+      "instructions": "System: Carehub. Select Level 4 Disposition",
+      "next_step_id": "leave_detailed_notes_dpa_result"
+    },
+    {
+      "id": "close_account",
+      "title": "Close Account",
+      "instructions": "System: Carehub. Close Account",
+      "next_step_id": "select_level_4_disposition"
+    }
+  ]
+}
