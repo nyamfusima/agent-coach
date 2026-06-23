@@ -44,7 +44,7 @@ export default function Landing({ onGetStarted }) {
           <p className="landing-sub">
             Your AI customer experience coach rides along on every call. It guides agents
             step by step and answers any policy question instantly, grounded in your real
-            process docs. No holds, no hunting through manuals.
+            process docs. No holds, no hunting through manuals!
           </p>
           <div className="landing-actions">
             <button className="cta" onClick={onGetStarted}>
