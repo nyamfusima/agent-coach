@@ -14,7 +14,7 @@ from app.models import db_models  # noqa: F401 — register all ORM models for c
 app = FastAPI(title="AgeCX AI API", version="0.1.0")
 
 # CORS. localhost (any port) is always allowed for local dev; deployed frontend
-# origins come from settings (defaults to the Vercel app, plus *.vercel.app
+# origins come from settings (default to the Vercel app, plus *.vercel.app
 # previews when enabled). All configurable via env without code change.
 _settings = get_settings()
 _localhost_re = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
