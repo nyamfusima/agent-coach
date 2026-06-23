@@ -1,0 +1,411 @@
+================================================================================
+AgeCX AI  -  PROJECT HANDOVER & LOCAL SETUP GUIDE
+"Your agent customer experience coach AI"
+================================================================================
+
+Last updated: 2026-06-23
+
+This document explains what the project is, everything that was built, every
+dependency, and exact step-by-step instructions to install and run it on a fresh
+Windows or macOS/Linux machine.
+
+Read the "QUICK START" section first. The rest is reference.
+
+
+================================================================================
+1. WHAT THIS PROJECT IS
+================================================================================
+
+AgeCX AI is an AI "agent coach" for call-center agents (built for Capita SA).
+It sits next to the agent during a live call and:
+
+  - Guides them step by step through the correct call process (the "flow").
+  - Answers any policy/process question instantly, grounded in real company
+    knowledge documents (Retrieval Augmented Generation = RAG).
+  - Also answers behavioural/soft-skill questions (empathy lines, tone,
+    de-escalation) like a helpful colleague.
+  - Has a supervisor dashboard (/admin) showing sessions, common questions,
+    and answers agents flagged as unhelpful.
+
+Goal: fewer "please hold while I check with my team leader" moments. Improves
+FCR (first call resolution), NPS (customer satisfaction), and handle time.
+
+
+================================================================================
+2. TECH STACK
+================================================================================
+
+Backend  : Python 3.12, FastAPI, SQLAlchemy, Postgres + pgvector
+LLM      : Anthropic Claude (model: claude-sonnet-4-6)  -> generates answers
+Embeddings: Voyage AI (model: voyage-3)                 -> powers RAG search
+Frontend : React 18 + Vite (plain JSX, plain CSS, no UI kit)
+3D       : Spline (@splinetool/react-spline) for the landing-page robot
+Database : Postgres 16 + pgvector, run locally via Docker Compose
+
+Live deployment (already set up):
+  Frontend (Vercel): https://agent-coach-topaz.vercel.app
+  Backend  (Render): https://agent-coach.onrender.com
+  (Local development does NOT need these; see Section 8 for deploy notes.)
+
+
+================================================================================
+3. PREREQUISITES (install these first)
+================================================================================
+
+  1. Git                - https://git-scm.com
+  2. Docker Desktop     - https://www.docker.com/products/docker-desktop
+                          (must be RUNNING before you start the database)
+  3. Python 3.12        - https://www.python.org/downloads/
+                          (3.10-3.13 work; 3.12 is what we target. NOT 3.14.)
+  4. Node.js 18+        - https://nodejs.org  (includes npm)
+
+  5. API keys (ask the team lead for these - they are secrets, NOT in the repo):
+       - ANTHROPIC_API_KEY   (starts with sk-ant-...)   from console.anthropic.com
+       - VOYAGE_API_KEY      (starts with pa-...)        from dash.voyageai.com
+     Note: a Voyage key WITHOUT a payment method has a low free-tier rate limit
+     (3 requests/min). The ingestion script batches around this, but adding a
+     payment method removes the limit (the 200M free tokens still apply).
+
+
+================================================================================
+4. PROJECT STRUCTURE
+================================================================================
+
+agent-coach/
+├── backend/                     FastAPI app
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── routes_flows.py   process list, start/advance/end session
+│   │   │   ├── routes_chat.py    RAG chat + thumbs-down feedback endpoint
+│   │   │   └── routes_admin.py   supervisor dashboard data (read-only)
+│   │   ├── services/
+│   │   │   ├── flow_engine.py    loads call flows from data/flows/*.json
+│   │   │   ├── rag.py            vector retrieval + Claude (grounded answers)
+│   │   │   └── ingestion.py      chunk + embed knowledge docs into pgvector
+│   │   ├── models/
+│   │   │   ├── db_models.py      SQLAlchemy tables
+│   │   │   └── schemas.py        Pydantic request/response models
+│   │   ├── core/
+│   │   │   ├── config.py         settings loaded from .env
+│   │   │   └── db.py             DB engine/session
+│   │   └── main.py               app entrypoint (CORS, startup, routers)
+│   ├── requirements.txt          Python dependencies (see Section 5)
+│   ├── .python-version           pins Python 3.12.7 (for deploy)
+│   ├── .env.example              template for environment variables
+│   └── .env                      YOUR real secrets (you create this; gitignored)
+├── frontend/                     React + Vite app
+│   └── src/
+│       ├── components/
+│       │   ├── Landing.jsx        3D hero / landing page
+│       │   ├── Login.jsx          agent sign-in (name/id/team -> localStorage)
+│       │   ├── ProcessSelector.jsx pick the call type
+│       │   ├── FlowPanel.jsx      step-by-step call guide
+│       │   ├── ChatPanel.jsx      "Ask AgeCX" chat
+│       │   ├── Admin.jsx          /admin supervisor dashboard
+│       │   ├── Logo.jsx           brand mark (soundwave SVG)
+│       │   ├── Spinner.jsx        loading spinner
+│       │   ├── hooks/             useAutoResizeTextarea, useFileInput
+│       │   └── ui/
+│       │       ├── AIInputWithFile.jsx  chat input with file attach
+│       │       └── SplineScene.jsx      lazy 3D scene loader
+│       ├── api.js                 all backend API calls
+│       ├── profile.js             agent profile localStorage helper
+│       ├── App.jsx                routing + layout
+│       ├── main.jsx               entrypoint (/admin path routing)
+│       └── index.css             ALL styles (plain CSS, theming)
+├── data/
+│   ├── flows/                    one JSON per call type (the flow graph)
+│   └── knowledge/<process>/      *.md/.txt/.pdf docs for the RAG chatbot
+├── tools/
+│   └── drawio_to_flow.py         converts *.drawio.xml -> flows + knowledge
+├── *.drawio.xml                  source process maps (Billing, Device, etc.)
+└── docker-compose.yml            local Postgres + pgvector
+
+
+================================================================================
+5. DEPENDENCIES
+================================================================================
+
+BACKEND (backend/requirements.txt) - installed via pip:
+  fastapi==0.115.0
+  uvicorn[standard]==0.30.6
+  pydantic==2.9.2
+  pydantic-settings==2.5.2
+  sqlalchemy==2.0.35
+  psycopg2-binary==2.9.10
+  pgvector==0.3.4
+  anthropic==0.34.2
+  httpx==0.27.2          (MUST stay <0.28; anthropic 0.34.2 breaks on 0.28+)
+  voyageai==0.2.3
+  python-dotenv==1.0.1
+  PyPDF2==3.0.1
+
+FRONTEND (frontend/package.json) - installed via npm install:
+  Runtime:
+    react ^18.3.1
+    react-dom ^18.3.1
+    lucide-react              (icons)
+    @splinetool/react-spline  (3D robot on landing page)
+    @splinetool/runtime
+  Dev:
+    vite ^5.4.8
+    @vitejs/plugin-react ^4.3.1
+
+INFRASTRUCTURE:
+  Docker image: pgvector/pgvector:pg16  (pulled automatically by docker compose)
+
+
+================================================================================
+6. QUICK START (Windows / PowerShell)
+================================================================================
+
+Open PowerShell. Run these in order. You will need TWO terminals at the end
+(one for the backend, one for the frontend).
+
+# 0. Get the code
+git clone https://github.com/nyamfusima/agent-coach.git
+cd agent-coach
+
+# 1. Start the database (Docker Desktop must be running first!)
+docker compose up -d
+
+# 2. Backend setup
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+#   --> NOW EDIT backend\.env and paste in the real ANTHROPIC_API_KEY and
+#       VOYAGE_API_KEY (see Section 7). Leave DATABASE_URL as the default.
+
+# 3. Load the knowledge base into the database (needs the Voyage key)
+python -m app.services.ingestion
+
+# 4. Run the backend API (leave this terminal running)
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+# 5. In a SECOND terminal, run the frontend
+cd agent-coach\frontend
+npm install
+npm run dev
+
+# 6. Open the app
+#    http://localhost:5173            (the agent app)
+#    http://localhost:5173/admin      (the supervisor dashboard)
+
+IMPORTANT: open the app at http://localhost:5173 (use "localhost", not
+"127.0.0.1") so it matches the backend CORS settings.
+
+--------------------------------------------------------------------------------
+macOS / Linux equivalents for steps 2-3 (everything else is identical):
+  cd backend
+  python -m venv .venv && source .venv/bin/activate
+  pip install -r requirements.txt
+  cp .env.example .env
+  python -m app.services.ingestion
+  uvicorn app.main:app --reload --port 8000
+--------------------------------------------------------------------------------
+
+
+================================================================================
+7. ENVIRONMENT VARIABLES (backend/.env)
+================================================================================
+
+Create backend/.env (copy from .env.example) and fill in the keys. Example:
+
+  # LLM
+  ANTHROPIC_API_KEY=sk-ant-...your key...
+  ANTHROPIC_MODEL=claude-sonnet-4-6
+
+  # Embeddings
+  VOYAGE_API_KEY=pa-...your key...
+  EMBEDDING_MODEL=voyage-3
+
+  # Database (default works with docker compose; do not change for local dev)
+  DATABASE_URL=postgresql://agentcoach:agentcoach@localhost:5432/agentcoach
+
+  # App
+  ENV=development
+
+  # CORS (optional for local; used in production)
+  CORS_ORIGINS=https://agent-coach-topaz.vercel.app
+  CORS_ALLOW_VERCEL=true
+
+NOTES:
+  - .env is gitignored (secrets never get committed). Each developer makes
+    their own. Get the actual key values from the team lead / password manager.
+  - The app fails gracefully if keys are missing: chat returns a clear
+    "API key not configured" message instead of crashing.
+
+
+================================================================================
+8. HOW THE DATA WORKS (flows + knowledge)
+================================================================================
+
+There are two kinds of content per "process" (call type):
+
+  1. FLOW  (data/flows/<process>.json)
+     The step-by-step call guide. Drives the left "Call steps" panel.
+
+  2. KNOWLEDGE (data/knowledge/<process>/*.md|.txt|.pdf)
+     Source documents. The ingestion script chunks + embeds these into the
+     database so the chat assistant can answer questions about them.
+
+Current processes: billing, device_support, essentials, upgrades, billing_query.
+
+These were generated from the original draw.io process maps (the *.drawio.xml
+files) using the converter:
+
+  cd backend
+  python ../tools/drawio_to_flow.py      # regenerates data/flows + data/knowledge
+
+After changing any knowledge docs, RE-RUN INGESTION so the DB is updated:
+
+  python -m app.services.ingestion                 # all processes
+  python -m app.services.ingestion --process billing   # just one process
+
+The ingestion supports .md, .txt, and .pdf files, prints per-file progress,
+and tells you the total chunk count at the end.
+
+
+================================================================================
+9. WHAT WAS BUILT / CHANGED (changelog of this engagement)
+================================================================================
+
+DATA PIPELINE
+  - Wrote tools/drawio_to_flow.py to parse the 4 "AS IS" draw.io process maps
+    (Billing, Device Support, Essentials, Upgrades) into app flow JSON + per-page
+    knowledge markdown. Handles swimlanes, decisions (YES/NO branches), and
+    reconnects the standard call wrap-up steps.
+  - Generated data/flows/*.json and data/knowledge/*/*.md from the diagrams.
+
+RAG / CHAT (backend/app/services/rag.py)
+  - Two answer modes: POLICY (answers only from the documents, never invents
+    rules) and BEHAVIOURAL (empathy/tone/phrasing from general best practice).
+  - Confidence score from retrieval similarity; a "low confidence" flag drives a
+    UI warning to consider escalating (skipped for behavioural answers).
+  - Output is formatted for fast reading (short lines, numbered steps, bullets)
+    and is dash-free plain text (no markdown symbols).
+
+BACKEND FEATURES
+  - Agent sessions store agent name / id / team and start/end times.
+  - Thumbs-down feedback endpoint -> flagged_answers table.
+  - Supervisor endpoints (/api/admin/...) for sessions, common questions,
+    flagged answers.
+  - Graceful API-key handling (HTTP 503 with a clear message if keys missing).
+  - Ingestion: PDF support, per-file progress, --process flag, rate-limit-safe
+    batching for the Voyage free tier, and a fixed text chunker.
+  - Light auto-migrations on startup (adds new columns if an old DB exists).
+  - CORS is env-driven: localhost (any port) always allowed; production origins
+    from CORS_ORIGINS; optional *.vercel.app previews.
+
+FRONTEND FEATURES
+  - Agent login (name / agent id / team, saved in localStorage).
+  - Header shows the active call type; loading spinners on all async actions.
+  - Chat input with file-attach (AIInputWithFile).
+  - Low-confidence warning + thumbs-down button on coach answers.
+  - Supervisor dashboard at /admin (no login for V1).
+
+BRANDING / UI
+  - Rebranded to "AgeCX AI" with logo mark and tagline.
+  - Full visual redesign (indigo/violet theme, plain CSS).
+  - Interactive 3D landing page: a Spline robot that follows the cursor plus a
+    spotlight glow that tracks the mouse. "Get started" reveals the sign-in form.
+    (3D is lazy-loaded and degrades gracefully if it cannot load.)
+
+DEPLOYMENT FIXES
+  - Pinned httpx==0.27.2 (anthropic 0.34.2 breaks on httpx 0.28+).
+  - Removed unused heavy deps (unstructured, markdown, python-multipart) so the
+    Render build succeeds.
+  - Added backend/.python-version (3.12.7) to stop the host using Python 3.14.
+  - Normalize postgres:// -> postgresql:// for managed-DB connection strings.
+
+
+================================================================================
+10. RUNNING IT AGAIN (day to day, after first setup)
+================================================================================
+
+You need 3 things running: the database, the backend, the frontend.
+
+  1. Make sure Docker Desktop is running, then:  docker compose up -d
+  2. Backend (in backend/, venv active):
+        python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+  3. Frontend (in a 2nd terminal, in frontend/):  npm run dev
+  4. Open http://localhost:5173
+
+To reactivate the venv in a new terminal (do NOT recreate it):
+  Windows:  .\.venv\Scripts\Activate.ps1
+  mac/linux: source .venv/bin/activate
+
+
+================================================================================
+11. TROUBLESHOOTING
+================================================================================
+
+"Couldn't reach the API / Failed to fetch" in the UI
+  -> The backend isn't running, OR Docker/the database is down, OR you opened
+     the app at 127.0.0.1 instead of localhost. Check, in order:
+       docker compose ps        (should show agent-coach-db-1 running)
+       is uvicorn running on :8000 ?
+       open the app at http://localhost:5173
+
+"connection to server at localhost:5432 failed: Connection refused"
+  -> The Postgres container is not running. Start Docker Desktop, then
+     docker compose up -d
+
+"ModuleNotFoundError: No module named 'app'"
+  -> You ran uvicorn from the wrong folder. Run it from inside backend/.
+
+"&& is not a valid statement separator" (PowerShell)
+  -> You used a macOS/Linux command. Use the Windows commands in Section 6
+     (PowerShell uses ; not &&, and .venv\Scripts\Activate.ps1 not source).
+
+"Port 8000 / 5173 already in use"
+  -> Something is still running. Windows, free port 8000:
+     Get-NetTCPConnection -LocalPort 8000 -State Listen |
+       Select-Object -ExpandProperty OwningProcess | ForEach-Object {Stop-Process -Id $_ -Force}
+
+Chat says "I don't have any process knowledge loaded"
+  -> You haven't run ingestion, or it failed. Run:
+     python -m app.services.ingestion
+
+Voyage error: "rate limited" or "RateLimitError"
+  -> Free tier is 3 requests/min. Wait a minute and retry, or add a payment
+     method in the Voyage dashboard (free tokens still apply).
+
+Voyage error: "Provided API key is invalid"
+  -> Wrong/expired key. Voyage keys start with "pa-". Update backend/.env and
+     re-run. The running backend caches settings at startup, so restart it after
+     changing keys.
+
+Anthropic error mentioning 'proxies'
+  -> httpx is too new. Make sure httpx==0.27.2 is installed:
+     pip install "httpx==0.27.2"
+
+
+================================================================================
+12. DEPLOYMENT (reference only - not needed for local dev)
+================================================================================
+
+Frontend on Vercel:
+  - Root directory: frontend/  ; Framework: Vite ; Build: npm run build ; out: dist
+  - Environment variable: VITE_API_BASE = https://agent-coach.onrender.com/api
+    (set BEFORE building; Vite inlines env at build time, so redeploy/rebuild)
+
+Backend on Render (Web Service):
+  - Root directory: backend/
+  - Build command:  pip install -r requirements.txt
+  - Start command:  uvicorn app.main:app --host 0.0.0.0 --port $PORT
+  - Environment variables:
+      DATABASE_URL        (Render Postgres Internal Database URL)
+      ANTHROPIC_API_KEY
+      VOYAGE_API_KEY
+      (optional) PYTHON_VERSION=3.12.7, CORS_ORIGINS, CORS_ALLOW_VERCEL
+  - Provision a Render PostgreSQL instance (supports pgvector). The backend
+    enables the extension and creates tables automatically on startup.
+  - After first deploy, seed the production DB from the Render Shell:
+      python -m app.services.ingestion
+
+================================================================================
+END OF HANDOVER
+================================================================================
