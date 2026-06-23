@@ -6,6 +6,8 @@ sqlalchemy==2.0.35
 psycopg2-binary==2.9.10
 pgvector==0.3.4
 anthropic==0.34.2
+# anthropic 0.34.2 passes proxies= to httpx, which httpx removed in 0.28 — pin below that.
+httpx==0.27.2
 voyageai==0.2.3
 python-dotenv==1.0.1
 unstructured==0.23.0

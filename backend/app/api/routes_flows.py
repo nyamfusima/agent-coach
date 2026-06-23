@@ -1,5 +1,6 @@
 """Endpoints for listing processes and driving the step-by-step flow guide."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -29,6 +30,8 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
 
     session = CallSession(
         agent_id=req.agent_id,
+        agent_name=req.agent_name,
+        team_name=req.team_name,
         process_id=req.process_id,
         current_step_id=flow.start_step_id,
     )
@@ -38,6 +41,18 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db)):
 
     current_step = flow_engine.get_step(req.process_id, flow.start_step_id)
     return StartSessionResponse(session_id=session.id, process=flow, current_step=current_step)
+
+
+@router.post("/sessions/{session_id}/end")
+def end_session(session_id: int, db: Session = Depends(get_db)):
+    """Mark a call session as ended so its duration can be reported."""
+    session = db.get(CallSession, session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.ended_at is None:
+        session.ended_at = func.now()
+        db.commit()
+    return {"status": "ended"}
 
 
 @router.post("/sessions/advance", response_model=AdvanceStepResponse)

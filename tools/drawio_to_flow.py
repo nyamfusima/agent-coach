@@ -31,25 +31,25 @@ PROCESSES = {
     "Billing Process": {
         "id": "billing",
         "name": "Billing",
-        "description": "Customer is calling about a bill, charge, refund or payment "
-        "— explain a bill, handle a dispute, change details, or take a payment.",
+        "description": "Customer is calling about a bill, charge, refund or payment. "
+        "Covers explaining a bill, handling a dispute, changing details, and taking a payment.",
     },
     "Device Support": {
         "id": "device_support",
         "name": "Device Support",
-        "description": "Customer needs help with a device — troubleshooting, "
-        "simulator, unlock, track/repair returns, or cancellations.",
+        "description": "Customer needs help with a device. Covers troubleshooting, "
+        "simulator, unlock, track and repair returns, and cancellations.",
     },
     "Essentials": {
         "id": "essentials",
         "name": "Essentials",
-        "description": "Account essentials — apply bundles, credits, vouchers, "
+        "description": "Account essentials. Covers applying bundles, credits, vouchers, "
         "refunds, clubcard points, and balance checks.",
     },
     "Upgrades": {
         "id": "upgrades",
         "name": "Upgrades",
-        "description": "Customer wants to upgrade — triage, eligibility check, and "
+        "description": "Customer wants to upgrade. Covers triage, eligibility check, and "
         "completing the upgrade.",
     },
 }
@@ -303,7 +303,7 @@ def build_flow(page: Page, meta: dict) -> dict:
         instructions = (f"System: {n.system}. " if n.system else "") + n.title
         if n.id in bridged:
             instructions += (
-                " — then complete the customer's request using the relevant "
+                ". Then complete the customer's request using the relevant "
                 "procedure (ask the assistant if unsure), and return here to close."
             )
         step = {

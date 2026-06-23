@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api } from '../api'
+import Spinner from './Spinner'
 
 export default function FlowPanel({ session, setSession }) {
   const [loading, setLoading] = useState(false)
@@ -21,7 +22,7 @@ export default function FlowPanel({ session, setSession }) {
 
   return (
     <div className="card flow-panel">
-      <h2>Call steps — {session.process.name}</h2>
+      <h2>Call steps: {session.process.name}</h2>
       <div className="step">
         <h3>{step.title}</h3>
         <p>{step.instructions}</p>
@@ -42,10 +43,15 @@ export default function FlowPanel({ session, setSession }) {
               {opt.label}
             </button>
           ))}
+          {loading && (
+            <p className="notice">
+              <Spinner label="Loading next step…" />
+            </p>
+          )}
         </div>
       ) : (
         <button disabled={loading} onClick={() => advance(null)}>
-          Next step →
+          {loading ? <Spinner label="Loading…" /> : 'Next step →'}
         </button>
       )}
     </div>

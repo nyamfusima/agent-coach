@@ -1,7 +1,7 @@
 {
   "process_id": "device_support",
   "name": "Device Support",
-  "description": "Customer needs help with a device — troubleshooting, simulator, unlock, track/repair returns, or cancellations.",
+  "description": "Customer needs help with a device. Covers troubleshooting, simulator, unlock, track and repair returns, and cancellations.",
   "start_step_id": "auto_answer",
   "steps": [
     {
@@ -13,7 +13,7 @@
     {
       "id": "identify_make_model_of_device",
       "title": "Identify make & Model of device",
-      "instructions": "System: Device Help. Identify make & Model of device — then complete the customer's request using the relevant procedure (ask the assistant if unsure), and return here to close.",
+      "instructions": "System: Device Help. Identify make & Model of device. Then complete the customer's request using the relevant procedure (ask the assistant if unsure), and return here to close.",
       "next_step_id": "close_account"
     },
     {

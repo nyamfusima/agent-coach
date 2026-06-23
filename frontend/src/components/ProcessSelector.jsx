@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import Spinner from './Spinner'
 
 export default function ProcessSelector({ onStart }) {
   const [processes, setProcesses] = useState([])
-  const [agentId, setAgentId] = useState('')
   const [processId, setProcessId] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [starting, setStarting] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -25,10 +26,15 @@ export default function ProcessSelector({ onStart }) {
     }
   }, [])
 
-  const handleStart = (e) => {
+  const handleStart = async (e) => {
     e.preventDefault()
-    if (!agentId || !processId) return
-    onStart(agentId, processId)
+    if (!processId || starting) return
+    setStarting(true)
+    try {
+      await onStart(processId)
+    } finally {
+      setStarting(false)
+    }
   }
 
   return (
@@ -37,43 +43,33 @@ export default function ProcessSelector({ onStart }) {
 
       {error && (
         <p className="error">
-          Couldn't reach the API — is the backend running on :8000? ({error})
+          Couldn't reach the API. Is the backend running on :8000? ({error})
         </p>
       )}
 
-      {!error && loading && <p className="notice">Loading call types…</p>}
+      {!error && loading && (
+        <p className="notice">
+          <Spinner label="Loading call types…" />
+        </p>
+      )}
 
       {!error && !loading && processes.length === 0 && (
         <p className="notice">
-          No call types found. Add a flow under <code>data/flows/</code> and
-          restart the backend.
+          No call types found. Add a flow under <code>data/flows/</code> and restart the backend.
         </p>
       )}
 
       <form onSubmit={handleStart}>
         <label>
-          Agent ID
-          <input
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-            placeholder="e.g. agent_42"
-            required
-          />
-        </label>
-        <label>
           Call type
           <select
             value={processId}
             onChange={(e) => setProcessId(e.target.value)}
-            disabled={!processes.length}
+            disabled={!processes.length || starting}
           >
             {processes.length === 0 ? (
               <option value="">
-                {loading
-                  ? 'Loading call types…'
-                  : error
-                  ? '— couldn’t load call types —'
-                  : '— no call types available —'}
+                {loading ? 'Loading call types…' : 'No call types available'}
               </option>
             ) : (
               processes.map((p) => (
@@ -89,8 +85,8 @@ export default function ProcessSelector({ onStart }) {
             {processes.find((p) => p.process_id === processId)?.description}
           </p>
         )}
-        <button type="submit" className="block" disabled={!processes.length || !agentId}>
-          Start call
+        <button type="submit" className="block" disabled={!processes.length || starting}>
+          {starting ? <Spinner label="Starting…" /> : 'Start call'}
         </button>
       </form>
     </div>

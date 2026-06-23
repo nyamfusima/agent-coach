@@ -1,7 +1,7 @@
 {
   "process_id": "upgrades",
   "name": "Upgrades",
-  "description": "Customer wants to upgrade — triage, eligibility check, and completing the upgrade.",
+  "description": "Customer wants to upgrade. Covers triage, eligibility check, and completing the upgrade.",
   "start_step_id": "auto_answer",
   "steps": [
     {

@@ -23,6 +23,15 @@ class Settings(BaseSettings):
     flows_dir: str = "../data/flows"
     knowledge_dir: str = "../data/knowledge"
 
+    def missing_ai_keys(self) -> list[str]:
+        """Names of required AI API keys that are unset/empty."""
+        missing = []
+        if not self.anthropic_api_key.strip():
+            missing.append("ANTHROPIC_API_KEY")
+        if not self.voyage_api_key.strip():
+            missing.append("VOYAGE_API_KEY")
+        return missing
+
 
 @lru_cache
 def get_settings() -> Settings:

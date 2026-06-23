@@ -28,10 +28,13 @@ class CallSession(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     agent_id = Column(String, index=True, nullable=False)
+    agent_name = Column(String, nullable=True)
+    team_name = Column(String, nullable=True)
     process_id = Column(String, nullable=False)
     current_step_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    ended_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class ChatMessage(Base):
@@ -43,4 +46,19 @@ class ChatMessage(Base):
     session_id = Column(Integer, index=True, nullable=False)
     role = Column(String, nullable=False)  # "agent" | "coach"
     content = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class FlaggedAnswer(Base):
+    """A coach answer an agent marked as unhelpful (thumbs down), for supervisor review."""
+
+    __tablename__ = "flagged_answers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, index=True, nullable=True)
+    process_id = Column(String, index=True, nullable=True)
+    agent_id = Column(String, nullable=True)
+    agent_name = Column(String, nullable=True)
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

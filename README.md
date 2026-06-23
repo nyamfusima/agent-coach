@@ -64,6 +64,15 @@ keeps running in the background until you stop it with `docker compose down`.
 
 ### 2. Backend setup (first time only)
 
+Windows (PowerShell):
+
+```powershell
+cd backend
+python -m venv .venv; .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
 macOS / Linux:
 
 ```bash
@@ -73,14 +82,9 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Windows (PowerShell):
-
-```powershell
-cd backend
-python -m venv .venv; .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-```
+> Once the venv is active your prompt shows `(.venv)` — you only do this
+> once. To reactivate it in a new terminal, just run `.\.venv\Scripts\Activate.ps1`
+> (Windows) or `source .venv/bin/activate` (macOS/Linux); don't re-create it.
 
 Then edit `.env` and fill in:
 
@@ -95,21 +99,26 @@ From `backend/` with the venv activated:
 python -m app.services.ingestion
 ```
 
-This reads everything under `data/knowledge/`, chunks it, embeds it, and
-stores it in Postgres. Re-run this whenever knowledge docs change.
+This reads everything under `data/knowledge/` (`.md`, `.txt`, and `.pdf`),
+chunks it, embeds it, and stores it in Postgres. Re-run this whenever knowledge
+docs change. To re-ingest a single process without touching the others:
+
+```bash
+python -m app.services.ingestion --process billing
+```
 
 ### 4. Run the backend API
 
 From `backend/` with the venv activated:
 
+```powershell
+# Windows (PowerShell)
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
 ```bash
 # macOS / Linux
 uvicorn app.main:app --reload
-```
-
-```powershell
-# Windows (PowerShell)
-.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 The API runs on http://localhost:8000 (interactive docs at
@@ -125,7 +134,12 @@ npm install        # first time only
 npm run dev
 ```
 
-Open http://localhost:5173 — pick a call type and start a session.
+Open http://localhost:5173 — sign in with your name / agent ID / team (stored
+locally, no password), pick a call type, and start a session.
+
+**Supervisor view:** open http://localhost:5173/admin for a read-only overview
+of recent call sessions, the most-asked questions per call type, and answers
+agents flagged as unhelpful (👎) — useful for finding gaps in the knowledge base.
 
 ## Running it again (day to day)
 

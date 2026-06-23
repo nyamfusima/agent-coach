@@ -1,7 +1,7 @@
 {
   "process_id": "billing",
   "name": "Billing",
-  "description": "Customer is calling about a bill, charge, refund or payment — explain a bill, handle a dispute, change details, or take a payment.",
+  "description": "Customer is calling about a bill, charge, refund or payment. Covers explaining a bill, handling a dispute, changing details, and taking a payment.",
   "start_step_id": "auto_answer",
   "steps": [
     {
@@ -124,7 +124,7 @@
     {
       "id": "open_account",
       "title": "Open Account",
-      "instructions": "System: Carehub. Open Account — then complete the customer's request using the relevant procedure (ask the assistant if unsure), and return here to close.",
+      "instructions": "System: Carehub. Open Account. Then complete the customer's request using the relevant procedure (ask the assistant if unsure), and return here to close.",
       "next_step_id": "close_account"
     },
     {

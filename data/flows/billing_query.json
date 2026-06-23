@@ -30,8 +30,8 @@
       "title": "3. Check account & charge details",
       "instructions": "Pull up the account and locate the charge in question. Based on what you find, choose the path that matches.",
       "options": [
-        { "label": "Charge is correct — customer just needs an explanation", "next_step_id": "explain_charge" },
-        { "label": "Charge is an error — refund is warranted", "next_step_id": "process_refund" },
+        { "label": "Charge is correct, customer just needs an explanation", "next_step_id": "explain_charge" },
+        { "label": "Charge is an error, refund is warranted", "next_step_id": "process_refund" },
         { "label": "Unclear / needs specialist review", "next_step_id": "escalate" }
       ]
     },

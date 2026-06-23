@@ -39,6 +39,8 @@ class ProcessSummary(BaseModel):
 class StartSessionRequest(BaseModel):
     agent_id: str
     process_id: str
+    agent_name: Optional[str] = None
+    team_name: Optional[str] = None
 
 
 class StartSessionResponse(BaseModel):
@@ -63,8 +65,54 @@ class ChatRequest(BaseModel):
     session_id: Optional[int] = None
     process_id: str
     question: str
+    agent_id: Optional[str] = None
+    agent_name: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
     answer: str
     sources: list[str] = []
+    confidence: float = 1.0          # 0..1, from retrieval similarity
+    low_confidence: bool = False     # true when retrieval was weak / no knowledge
+
+
+# --- Feedback ---
+
+class FlagAnswerRequest(BaseModel):
+    session_id: Optional[int] = None
+    process_id: Optional[str] = None
+    agent_id: Optional[str] = None
+    agent_name: Optional[str] = None
+    question: str
+    answer: str
+
+
+# --- Admin / supervisor ---
+
+class AdminSession(BaseModel):
+    session_id: int
+    agent_id: str
+    agent_name: Optional[str] = None
+    team_name: Optional[str] = None
+    process_id: str
+    process_name: str
+    created_at: Optional[str] = None
+    duration_seconds: Optional[int] = None
+    message_count: int = 0
+
+
+class AdminQuestion(BaseModel):
+    process_id: str
+    process_name: str
+    question: str
+    count: int
+
+
+class AdminFlaggedAnswer(BaseModel):
+    id: int
+    process_id: Optional[str] = None
+    agent_id: Optional[str] = None
+    agent_name: Optional[str] = None
+    question: str
+    answer: str
+    created_at: Optional[str] = None
