@@ -28,7 +28,7 @@ export default function Landing({ onGetStarted }) {
             Age<span className="brand-accent">CX</span> <span className="brand-ai">AI</span>
           </span>
         </div>
-        <button className="link link-on-dark" onClick={onGetStarted}>
+        <button className="landing-actions" onClick={onGetStarted}>
           Sign in
         </button>
       </nav>
