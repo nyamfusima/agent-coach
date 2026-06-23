@@ -100,7 +100,7 @@ export default function Admin() {
           <div className="card">
             <h2>Most asked questions (by call type)</h2>
             {questions.length === 0 ? (
-              <p className="hint">No questions logged yet.</p>
+              <p className="hint">No questions logged yet</p>
             ) : (
               <table className="admin-table">
                 <thead>
