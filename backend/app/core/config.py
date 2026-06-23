@@ -23,6 +23,15 @@ class Settings(BaseSettings):
     flows_dir: str = "../data/flows"
     knowledge_dir: str = "../data/knowledge"
 
+    # CORS: comma-separated production frontend origins allowed to call the API.
+    # localhost (any port) is always allowed for local dev; this adds deployed ones.
+    cors_origins: str = "https://agent-coach-topaz.vercel.app"
+    # Also allow any https://<name>.vercel.app origin (covers Vercel previews).
+    cors_allow_vercel: bool = True
+
+    def allowed_origins(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
     def missing_ai_keys(self) -> list[str]:
         """Names of required AI API keys that are unset/empty."""
         missing = []

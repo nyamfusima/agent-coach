@@ -7,16 +7,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.api import routes_admin, routes_chat, routes_flows
+from app.core.config import get_settings
 from app.core.db import Base, engine
 from app.models import db_models  # noqa: F401 — register all ORM models for create_all
 
 app = FastAPI(title="AgeCX AI API", version="0.1.0")
 
-# Allow the local Vite dev server to call the API, whether it's opened via
-# localhost or 127.0.0.1 and regardless of the dev-server port.
+# CORS. localhost (any port) is always allowed for local dev; deployed frontend
+# origins come from settings (defaults to the Vercel app, plus *.vercel.app
+# previews when enabled). All configurable via env without code changes.
+_settings = get_settings()
+_localhost_re = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+_origin_regex = (
+    rf"({_localhost_re}|https://[a-z0-9-]+\.vercel\.app)"
+    if _settings.cors_allow_vercel
+    else _localhost_re
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_origins=_settings.allowed_origins(),
+    allow_origin_regex=_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
